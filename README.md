@@ -34,7 +34,7 @@ Download Anki flashcard: https://apps.ankiweb.net/
 - SSL Warnings (HCI)
   
 # In Progress
-
+- Power Grid (McKenzy)
 
 # Yet To Add
 ## Network
@@ -58,6 +58,5 @@ Download Anki flashcard: https://apps.ankiweb.net/
 - PIR
 - PBFT
 ## MISCELLANEOUS
-- Power Grid
 - TaintDroid
 
