@@ -1,0 +1,139 @@
+[Membership] Explain the attack presented in this paper.,"The attacker creates a collection of models (one for each output class of the target model) and builds 'k' many ""shadow"" models intended to behave similarly to the target model. The shadow models are trained using ground truth values, so supervised learning can be utilized during training. 
+
+The end-to-end attack process: an attacker has a (data record, class label) pair. It asks the target model to predict the label and is given a prediction vector of confidence values. These values depend heavily on the true class of the data record. The prediction and the original pair is passed into the attack model which decides if ((data record, class label), prediction) is in the training set of the target model."
+[Membership] What is the main idea behind using shadow models for the attack?,Similar models trained on relatively similar data records using the same service behave similiarly.
+[Membership] How would changing the number of shadow models affect accuracy?,Increasing the number improves accuracy but incurs a higher cost.
+[Membership] The paper specifically mentioned that the success of membership inference is directly related to...,"1. Generalizability of the target model
+2. Diversity of the training data"
+[Membership] What are some mitigations to this attack?,"Differential privacy (which are secure against this type of attack by construction)
+If using ML-as-a-service, pressure the provider to being more careful about accepting data and producing models
+Use regularization that overcome overfitting by penalizing large parameters. [most helpful]
+Restrict prediction vector to the top k classes [not helpful]
+"
+[Deanony] Provide an overview of the paper.,"The authors present a new attack method that is able to re-indentify individual entries in high-dimesional, sparse datasets. The technique is robust against pertubation in the data."
+[Deanony] How did Netflix attempt to ensure privacy on the released dataset?,(1) Only released <1/10 of the entire dataset. (2) Randomly perturbed/changed entries. (3) Claimed to randomly sample from the entire dataset. (4) Removed all customer identifying info so all that remained was ratings and dates.
+[Deanony] What does sparsity mean?,Each individual record contains values only for a small fraction of attributes.
+[Deanony] What is the adversary model and goal for this paper?,"Model: The adversary has access to some auxilliary information related to record 'r' that may possibly be imprecise, pertubed, and incorrect.
+
+Goal: Given the auxiliary information and an anonymized sample D' of D, the goal is to reconstruct attribute values of the entire record 'r'; thereby identifying record 'r'."
+[Deanony] What are alternatives that Netflix should have used to release the dataset?,"There isn't really a good answer; anything they could do would destroy the utility of the data and renders the purpose of the Netflix Prize Challenge pointless. However, you could:
+(1) further sanitize the dataset so it is not as sparse
+(2) release the dataset without column names (they argue this would make it harder to do, but not impossible)
+(3) perturb more data samples with the trade off of destroying utility."
+[Deanon] What are the two deanonymization algorithms presented and what is the key difference?,"1. SCOREBOARD and 2. SCOREBOARD-RH
+
+Difference:
+SCOREBOARD is not robust for some applications; it fails if any of the attributes in the adversary's auxiliary information are completely incorrect.
+RH provides additional heuristics that make it more practical. The scoring function gives higher weight to statistically rare attributes. To improve robustness, the matching criterion requires the top score to be significantly above the second-best score. 
+"
+[RAPPOR] What does RAPPOR stand for and what does the system do?,"Random Aggregatable Privacy-Preserving Ordinal Response (RAPPOR) crowdsources statistics from end-user software, anonymously, with strong privacy guarantees. It allows access to overall client data without permitting looking at individual records."
+[RAPPOR] What do RAPPOR responses look like?,"Rappor responses are assumed to be bit strings where each bit corresponds to a randomized response for some logical predicate on the report client's properties--such as its values, context, history."
+[RAPPOR] The paper attempts to protect against two attack models. What are those models?,"One-time attack - the attacker has access to a single report and can be stopped with a single round of randomized response.
+
+Longitudinal/Multiple Collection attack - the attacker has access to multiple reports over time from the same user which is harder to stop and at the heart of this algo."
+[RAPPOR] What basic idea does RAPPOR build on and how does it use this idea?,"Memoization -- this is when the process stores the result of an expensive function call so when it is called again with that input, the expensive function doesn't rerun; thus improving performance.
+
+It uses memoization layered between two rounds of the randomized response game to ensure one-time and longitudinal privacy."
+[RAPPOR] Does the RAPPOR algorithm satisfy differential privacy?,Yes -- there is a proof section.
+[RAPPOR] What are the steps of the RAPPOR algorithm?,"Signal: Hash the client's value v onto the bloom filter B of size k using h hash functions.
+Permanent randomized response: For each client's value v and bit i, create a binary reporting value Bi' s.t. Bi'=1 with probability 0.5f, Bi'=0 with probability 0.5f, Bi'=Bi with probability 1-f. f is a user-tuneable parameter controlling the longitudinal privacy guarantee.
+Memoize Bi' and reuse for all future reports on the distinct value v.
+Instantaneous Randomized Response: Allocate a bit array S of size k. Set each bit i in S with probabilities: 
+                 (a) P(Si = 1) = q if Bi'= 1
+                 (b) P(Si = 1) = p if Bi'= 0
+Report S to the server.
+"
+"[RAPPOR] What are the two main ""response steps"" in the algorithm and why is each important to the overall algorithm?","Permanent Randomized -- creates the fake bloom filter input that is memoized and reused for all future reports on the value v. This protects the privacy of the client's data.
+
+Instantaneous Randomized -- creates the response bit array S based on probabilities (p and q) to send back to the server. This protects against a longitudinal tracker."
+[RAPPOR] What would happen if the system reported different B' when reporting information about B?,"The attacker could perform an ""averaging"" attack and estimate the true value from observing multiple noisy versions of it."
+[RAPPOR] Why does the mechanism need the instantaneous randomization response?,"This response signficantly increases the difficulty of tracking a client based on B', which could otherwise be viewed as a unique identifier in longitudinal reporting."
+[RAPPOR] What are the three basic RAPPOR modifications discussed in the paper?,"1. One-time RAPPOR: Client only reports the data once negating the need for the instantaneous randomized response process.
+
+2. Basic RAPPOR: If the set of strings being collected is well defined, small, and can be mapped deterministically, you can remove the bloom filter.
+
+3. Basic One-Time RAPPOR: Combination of the first two and the simplest set up. One round of randomization using a deterministic mapping of strings into their own unqiue bits."
+[RAPPOR] How does the server decode the received reports?,"At a high level, the server performs statistical analysis on the received reports to determine which frequencies of strings are statistically significant from 0.
+
+It implements this successfully using cohorts. Prior to data collection, each client is randomly assigned to be a member of one of m cohorts. Cohorts implement different sets of hash functions on their Bloom filters to reduce the chance of accidental collisions."
+[RAPPOR] How did the authors test their system?,"They used two simulated studies and two real-world collection examples.
+
+The simulated studies learned the shape of the underlying normal distribution and reporting on a set of exponentially decreasing set of strings.
+
+The real-world collection reported Windows process names and learning/reporting the distribution of Chrome homepages."
+[RAPPOR] What is one limitation of their approach?,"The system doesn't prevent ""leakage"" of additional information when respondents use several clients that participate in the same collection event. However, they argue that linking this together is difficult so it's not a massive concern."
+[RNN] Provide an overview of this paper.,This paper showed that defensive distillation (a hardening technique for adversarial examples) does not increase the robustness of NN by introducing three attack types. They propose using high-confidence adversarial examples in a simple transferability test to break defensive distillation. They hoped these attacks would be used as the new baseline in robustness evaluation of NN.
+[RNN] What is the threat model and assumptions for the attacker?,Assume the adversary has complete access to a neural network (including architecture and all parameters). This is a white-box model.
+[RNN] What is the goal of adversarial examples (specific in this case and in general),"General: given an input x and any classification target t, it is possible to find a new x' that is similar to x but classified as t.
+
+Specific: how many distortion needs to be applied to an image to cause (mis)classification. this paper uses Lp norms as the metric. These values are reasonable approximations of human perceptual distance."
+[RNN] What are the three distance metric utilized in this paper to create the attack?,"1. L0 distance measures the number of pixels that have changed.
+2. L2 distance measures the standard Euclidean (root-mean-square) distance between x and x'.
+3. Linf distance measures the maximum change to any of the coordinates
+|| x - x' ||inf = max(|x1 - x1'|, ..., |xn - xn'|)"
+[RNN] Formally define the problem of finding an adversarial instance for image x.,"minimize D(x, x + δ) 
+s.t.          C(x + δ) = t
+               x + δ  in  [0,1]^n
+
+where x is fixed and the goal is to find δ that minimizes D(x, x + δ). Here D is some distance metric (L0,L2,Linf)"
+[RNN] How did this work compare to previous state of the art work?,This work was able to find closer adversarial examples than the previous state of the art attacks and never failed to find an adversarial example.
+"[RNN] Describe the previous method for ""securing"" NN against adverarial examples.","Known as defensive distillation which proceeds in 4 steps:
+Train a teacher network by setting softmax temperature to T during training.
+Compute soft labels by applying the teacher network to each instance in the training set, with softmax temp T.
+Train the distilled network (same size a teacher) on the soft labels using softmax temp T.
+Run distilled network at test time with softmax temp 1.
+Increasing distillation temperature forces the model to become more confident in its predictions. As T goes to zero, softmax approaches max; as T gets larger, softmax approaches a uniform distribution."
+[RNN] Does distillation temperature increase robustness of neural network?,No. It only causes existing attacks to fail more often.
+[Membership] What is the goal of this membership inference attack?,"Given black-box access to a machine learning model and a record, determine whether this record was used as part of the model's training dataset or not."
+[Membership] Describe the attack model and the attacker's capabilities in this paper.,"The attacker is given a data record and black-box query access to the target model. The attacker is successful if they can correctly determine if the data record was part of the model's training set or not.
+
+Assume the attacker can access the model's prediction vector on any input data, and they know the input/output format/values of the model. The attacker may also know some background knowledge of the population from which the target model's training set was drawn."
+[Membership] What observation of machine learning models does this attack exploit?,"It exploits the observation that ML models often behave differently on the data that they were trained on versus the data that they ""see"" for the first time."
+[Deanony] What dataset(s) did the authors' use to identify entries in the paper?,They identified entries in the Netflix Prize dataset using public information found on the Internet Movie Database (IMDb) as background knowledge.
+[Car] Briefly describe the paper and its aims.,"This paper answered the question if automobiles were susceptible to remote compromise and how an attacker may perform attacks. At a high level, the attacker is able to use one of the standard user ports (OBD-II, CD, Bluetooth, etc) to directly connect to the car's CAN and take full control."
+[Car] The paper made a distinction between an attacker's technical capabilities and operational capabilities. What is this distinction?,"Technical capabilities describe assumptions related to what the adversary knows about its target vehicles and her ability to analyze these systems to develop malicious inputs for various I/O channels.
+
+Operational capabilities characterize the adversary's requirements in delivering a malicious input to a particular access vector in the field."
+[Car] Name and describe the three access methods the author's identified. Include specific interfaces with each.,"Indirect Physical Access
+Adversary doesn't have direct physical access to these ports but may act through an intermediary.
+OBD-II, CD, USB, iPod
+Short-Range Wireless Access
+Assume the adversary is able to place a wireless transmitter in proximity to the car's receiver.
+Bluetooth, Remote keyless entry, tire pressure monitoring system
+Long-Range Wireless Access
+Broadcast Channels (GPS, Satellite Radio, Digital Radio); channels not directed at a single car but can be ""tuned into"" by receivers on demand.
+Addressable channels (remote telematics systems); continuous connectivity via cellular voice and data networks.
+"
+"[Car] What is an ECU, how are they related to the CAN, and why are the important to the threat model?","ECU -> Electronic Control Unit. Digitial components that oversee and control physical processes in the vehicle. Examples: drivetrain, brakes, lights, entertainment.
+
+ECUs communicate over the Controller Area Network (CAN).
+
+The CAN is a bus model, where packets flood the entire network. Thus, each ECU has access to every other ECU."
+[Car] Provide an example attack on an indirect physical channel,"OBD-II Port: Communication between client and PassThru device is unauthenticated and depends exclusively on external network security. Attacker on the same WiFi as the PassThru device can easiler connect to it and once the PassThru is connected to a car, obtain control over the car's reprogramming. Or the attacker could compromise the PassThru device itself (and propogate to other PassThru devices), implant malicious code, and impact more cars."
+[Car] Provide an example attack on a short-range wireless channel attack.,"Bluetooth:
+- ""easy"": compromise a pre-connected phone and wait until it autoconnects.
+- Attacker needs to learn car's bluetooth MAC address and then pair their device with the car. The paper was able to brute force a PIN the driver would enter to pair the device."
+[Car] Provide an example attack on a long-range wireless channel attack.,"There are two key vulnerabilities that can be combined to create the attack.
+
+1. Authentication Vulnerability (w/ the telematics call center)
+Authentication Method: car issues a random, 3 byte challenge. The TCC hashes the challenge along with a 64-bit pre-shared key to generate a response to the challenge.
+
+Vulnerabilities: The nonce is static and identical on two test cars. The random number generator is re-initialized when the telematics unit starts and is seeded with the same value. There is a code parsing error that permits circumvention for about 1 of every 256.
+
+2. Low-Level Buffer Overflow.
+Custom designed code ""glues"" the aqLink (comm) protocol to the command program and assumed a fixed packet length. Packet lengths larger than this causes buffer overflow which can be exploited to take control. Requires the attacker to extend the Command's timeout length from 12 sec to >14 sec.
+"
+[SSL] Briefly describe the paper and its goals.,This paper aimed to better understand if users understood the risks associated with SSL warnings and would take appropriate actions to protect their information. They found that most individuals ignored the warnings and that design of the graphics was an important part of whether people continued or went back to safety.
+"[SSL] How did they define ""experts"" and what may be downsides associated with this definition.","A participant was an expert if they met two of the following qualifications:
+A degree in IT-related field
+computer security job experience
+computer security course work
+knowledge of a programming language
+attended a computer security conference in past two years
+Downsides: literally way too broad; what does knowledge of a programming language have to do with security??"
+[SSL] The authors tested two warning types. Describe them.,"Single-page, severe warning.
+
+Multi-page that first asks a question and then either (a) the severe warning (if accessing sensitive information) or (b) the webpage (if accessing non-sensitive information)."
+[SSL] Limitation of the study.,"Did not attempt to measure the long term affects of habituation to the warnings.
+The study was advertised that participants would be using their banking information prior to participation, so the most security conscious participants may have opted out.
+"
