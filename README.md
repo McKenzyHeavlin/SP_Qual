@@ -13,7 +13,7 @@ Download Anki flashcard: https://apps.ankiweb.net/
 # Developing New Cards
 1. Check the 'Yet To Add' list below; select a paper to write cards for; and update the README and move the paper title to 'In Progress'.
 2. Write questions/answers in a manner that can be easily saved/exported as a .csv file. I would suggest NOT doing this directly in Anki, as exporting is annoying.
-3. Update the Github repo with your changes to the 
+3. Update the Github repo with your changes to 'anki_flashcards.csv' 
 4. Update the README to reflect changes appropriately.
 5. Notify the study group that new cards are complete.
 
